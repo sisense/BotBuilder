@@ -38,15 +38,22 @@ var Session = (function (_super) {
         var now = new Date().getTime();
         var middleware = this.options.middleware || [];
         var next = function () {
-            var handler = index < middleware.length ? middleware[index] : null;
-            if (handler) {
-                index++;
-                handler(session, next);
+            try
+            {
+                var handler = index < middleware.length ? middleware[index] : null;
+                if (handler) {
+                    index++;
+                    handler(session, next);
+                }
+                else {
+                    _this.inMiddleware = false;
+                    _this.sessionState.lastAccess = now;
+                    _this.routeMessage();
+                }
             }
-            else {
-                _this.inMiddleware = false;
-                _this.sessionState.lastAccess = now;
-                _this.routeMessage();
+            catch(err)
+            {
+               _this.error(err);
             }
         };
         this.sessionState = sessionState || { callstack: [], lastAccess: now, version: 0.0 };
